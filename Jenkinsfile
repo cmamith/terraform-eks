@@ -23,7 +23,7 @@ pipeline {
       steps {
         dir('environments/dev') {
           sh 'pwd'  // Print the current working directory inside the dev directory
-          sh 'terraform plan -var-file=terraform.tfvars'  // Plan the Terraform deployment
+          sh 'terraform plan -var-file=terraform.tfvars --lock=false'  // Plan the Terraform deployment
         }
       }
     }
@@ -43,7 +43,7 @@ pipeline {
     stage('Deploy to EKS') {
       steps {
         sh 'pwd'  // Print the current working directory
-        sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev'  // Update kubeconfig for EKS
+        sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev --lock=false'  // Update kubeconfig for EKS
         sh 'kubectl apply -f k8s/'  // Deploy to EKS
       }
     }
