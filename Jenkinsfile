@@ -19,17 +19,17 @@ pipeline {
     }
 
     stage('Terraform Init') {
-      steps {
-        script {
-          def envPath = "environments/${params.ENVIRONMENT}"
-          echo "🔧 Initializing Terraform for ${params.ENVIRONMENT} environment"
-          dir(envPath) {
-            sh 'pwd && ls -latr'
-            sh "terraform init -backend-config=\"key=${params.ENVIRONMENT}/terraform.tfstate\""
-          }
-        }
+  steps {
+    script {
+      def envPath = "environments/${params.ENVIRONMENT}"
+      echo "🔧 Initializing Terraform for ${params.ENVIRONMENT} environment"
+      dir(envPath) {
+        sh 'pwd && ls -latr'
+        sh "terraform init -reconfigure -backend-config=\"key=${params.ENVIRONMENT}/terraform.tfstate\""
       }
     }
+  }
+}
 
     stage('Terraform Plan') {
       steps {
