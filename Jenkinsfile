@@ -8,9 +8,13 @@ pipeline {
   stages {
     stage('Terraform Init') {
       steps {
-        sh 'ls - latr'
+        // Print current working directory and list files before running terraform init
+        sh 'pwd'  // Print the current working directory
+        sh 'ls -latr'  // List the contents of the current directory
         dir('terraform/environments/dev') {
-          sh 'terraform init'
+          sh 'pwd'  // Print the current working directory inside the dev directory
+          sh 'ls -latr' // List the contents of the current directory
+          sh 'terraform init'  // Initialize Terraform
         }
       }
     }
@@ -18,7 +22,8 @@ pipeline {
     stage('Terraform Plan') {
       steps {
         dir('terraform/environments/dev') {
-          sh 'terraform plan -var-file=terraform.tfvars'
+          sh 'pwd'  // Print the current working directory inside the dev directory
+          sh 'terraform plan -var-file=terraform.tfvars'  // Plan the Terraform deployment
         }
       }
     }
@@ -29,15 +34,17 @@ pipeline {
       }
       steps {
         dir('terraform/environments/dev') {
-          sh 'terraform apply -auto-approve -var-file=terraform.tfvars'
+          sh 'pwd'  // Print the current working directory inside the dev directory
+          sh 'terraform apply -auto-approve -var-file=terraform.tfvars'  // Apply Terraform changes
         }
       }
     }
 
     stage('Deploy to EKS') {
       steps {
-        sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev'
-        sh 'kubectl apply -f k8s/'
+        sh 'pwd'  // Print the current working directory
+        sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev'  // Update kubeconfig for EKS
+        sh 'kubectl apply -f k8s/'  // Deploy to EKS
       }
     }
   }
