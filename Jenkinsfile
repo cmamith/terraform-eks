@@ -5,47 +5,87 @@ pipeline {
     AWS_REGION = 'ap-southeast-1'
   }
 
+  parameters {
+    choice(name: 'ENVIRONMENT', choices: ['dev', 'prod'], description: 'Target environment')
+  }
+
   stages {
+
+    stage('Checkout') {
+      steps {
+        echo "🔄 Checking out code..."
+        checkout scm
+      }
+    }
+
     stage('Terraform Init') {
       steps {
-        // Print current working directory and list files before running terraform init
-        sh 'pwd'  // Print the current working directory
-        sh 'ls -latr'  // List the contents of the current directory
-        dir('environments/dev') {
-          sh 'pwd'  // Print the current working directory inside the dev directory
-          sh 'ls -latr' // List the contents of the current directory
-          sh 'terraform init'  // Initialize Terraform
+        script {
+          def envPath = "environments/${params.ENVIRONMENT}"
+          echo "🔧 Initializing Terraform for ${params.ENVIRONMENT} environment"
+          dir(envPath) {
+            sh 'pwd && ls -latr'
+            sh "terraform init -backend-config=\"key=${params.ENVIRONMENT}/terraform.tfstate\""
+          }
         }
       }
     }
 
     stage('Terraform Plan') {
       steps {
-        dir('environments/dev') {
-          sh 'pwd'  // Print the current working directory inside the dev directory
-          sh 'terraform plan -var-file=terraform.tfvars --lock=false'  // Plan the Terraform deployment
+        script {
+          def envPath = "environments/${params.ENVIRONMENT}"
+          echo "📄 Terraform Plan for ${params.ENVIRONMENT}"
+          dir(envPath) {
+            sh "terraform plan -var-file=terraform.tfvars --lock=false"
+          }
         }
       }
     }
 
-    stage('Terraform Apply') {
+    stage('Approval for Production') {
       when {
-        branch 'dev'
+        expression { return params.ENVIRONMENT == 'prod' }
       }
       steps {
-        dir('environments/dev') {
-          sh 'pwd'  // Print the current working directory inside the dev directory
-          sh 'terraform apply -auto-approve -var-file=terraform.tfvars --lock=false'  // Apply Terraform changes
+        input message: "🚨 Confirm Apply for Production?"
+      }
+    }
+
+    stage('Terraform Apply') {
+      steps {
+        script {
+          def envPath = "environments/${params.ENVIRONMENT}"
+          echo "🚀 Applying Terraform changes to ${params.ENVIRONMENT}"
+          dir(envPath) {
+            sh "terraform apply -auto-approve -var-file=terraform.tfvars --lock=false"
+          }
         }
+      }
+    }
+
+    stage('Update Kubeconfig') {
+      steps {
+        echo "🔑 Updating kubeconfig for eks-${params.ENVIRONMENT}"
+        sh "aws eks update-kubeconfig --region $AWS_REGION --name eks-${params.ENVIRONMENT}"
       }
     }
 
     stage('Deploy to EKS') {
       steps {
-        sh 'pwd'  // Print the current working directory
-        sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev'  // Update kubeconfig for EKS
-        sh 'kubectl apply -f K8s/'  // Deploy to EKS
+        echo "📦 Deploying application manifests to EKS cluster"
+        sh 'kubectl apply -f K8s/'  // Ensure folder is lowercase
       }
+    }
+
+  }
+
+  post {
+    success {
+      echo "✅ Deployment to ${params.ENVIRONMENT} completed successfully."
+    }
+    failure {
+      echo "❌ Deployment to ${params.ENVIRONMENT} failed. Check the logs."
     }
   }
 }
