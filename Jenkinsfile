@@ -8,6 +8,7 @@ pipeline {
   stages {
     stage('Terraform Init') {
       steps {
+        sh 'ls - latr'
         dir('terraform/environments/dev') {
           sh 'terraform init'
         }
