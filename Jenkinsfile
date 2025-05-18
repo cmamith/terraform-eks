@@ -44,7 +44,7 @@ pipeline {
       steps {
         sh 'pwd'  // Print the current working directory
         sh 'aws eks update-kubeconfig --region $AWS_REGION --name eks-dev'  // Update kubeconfig for EKS
-        sh 'kubectl apply -f k8s/'  // Deploy to EKS
+        sh 'kubectl apply -f K8s/'  // Deploy to EKS
       }
     }
   }
