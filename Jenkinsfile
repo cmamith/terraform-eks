@@ -22,7 +22,7 @@ pipeline {
   steps {
     echo "🔍 Running yamllint using Docker"
     sh '''
-     docker run --rm -v /Users/amithcm/.jenkins/jobs/terraform-k8s-deploy/workspace:/data cytopia/yamllint yamllint /data/K8s/
+     docker run --rm -v $PWD:/data cytopia/yamllint /usr/local/bin/yamllint /data/K8s
     '''
   }
 }
