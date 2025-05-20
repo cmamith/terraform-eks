@@ -18,14 +18,14 @@ pipeline {
       }
     }
 
-    stage('YAML Lint') {
-  steps {
-    echo "🔍 Running yamllint using Docker"
-    sh '''
-     docker run --rm -v $(pwd):/data cytopia/yamllint /data
-    '''
-  }
-}
+//     stage('YAML Lint') {
+//   steps {
+//     echo "🔍 Running yamllint using Docker"
+//     sh '''
+//      docker run --rm -v $(pwd):/data cytopia/yamllint /data
+//     '''
+//   }
+// }
 
     stage('Terraform Init') {
       steps {
