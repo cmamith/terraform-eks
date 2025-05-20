@@ -11,10 +11,11 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
+   stage('Linting') {
       steps {
-        echo "🔄 Checking out code..."
-        checkout scm
+        echo "✅ Validating YAML and Terraform format"
+        sh 'yamllint K8s/ || true'  // ensure yamllint is installed
+        sh 'terraform fmt -check -recursive'
       }
     }
 
