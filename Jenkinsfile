@@ -11,26 +11,37 @@ pipeline {
 
   stages {
 
-   stage('Linting') {
+    stage('Checkout') {
       steps {
-        echo "✅ Validating YAML and Terraform format"
-        sh 'yamllint K8s/ || true'  // ensure yamllint is installed
-        sh 'terraform fmt -check -recursive'
+        echo "🔄 Checking out code..."
+        checkout scm
+      }
+    }
+
+    stage('YAML Lint') {
+      steps {
+        script {
+          echo "🔍 Running yamllint on K8s manifests"
+          sh '''
+            pip install --user yamllint
+            ~/.local/bin/yamllint K8s/ || true
+          '''
+        }
       }
     }
 
     stage('Terraform Init') {
-  steps {
-    script {
-      def envPath = "environments/${params.ENVIRONMENT}"
-      echo "🔧 Initializing Terraform for ${params.ENVIRONMENT} environment"
-      dir(envPath) {
-        sh 'pwd && ls -latr'
-        sh "terraform init -reconfigure -backend-config=\"key=${params.ENVIRONMENT}/terraform.tfstate\""
+      steps {
+        script {
+          def envPath = "environments/${params.ENVIRONMENT}"
+          echo "🔧 Initializing Terraform for ${params.ENVIRONMENT} environment"
+          dir(envPath) {
+            sh 'pwd && ls -latr'
+            sh "terraform init -reconfigure -backend-config=\"key=${params.ENVIRONMENT}/terraform.tfstate\""
+          }
+        }
       }
     }
-  }
-}
 
     stage('Terraform Plan') {
       steps {
@@ -75,7 +86,7 @@ pipeline {
     stage('Deploy to EKS') {
       steps {
         echo "📦 Deploying application manifests to EKS cluster"
-        sh 'kubectl apply -f K8s/'  // Ensure folder is lowercase
+        sh 'kubectl apply -f K8s/'
       }
     }
 
@@ -90,3 +101,4 @@ pipeline {
     }
   }
 }
+ 
