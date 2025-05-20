@@ -18,7 +18,7 @@ pipeline {
       }
     }
 
-    sstage('YAML Lint') {
+    stage('YAML Lint') {
   steps {
     echo "🔍 Running yamllint using Docker"
     sh '''
