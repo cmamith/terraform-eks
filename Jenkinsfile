@@ -18,17 +18,14 @@ pipeline {
       }
     }
 
-    stage('YAML Lint') {
-      steps {
-        script {
-          echo "🔍 Running yamllint on K8s manifests"
-          sh '''
-            pip install --user yamllint
-            ~/.local/bin/yamllint K8s/ || true
-          '''
-        }
-      }
-    }
+    sstage('YAML Lint') {
+  steps {
+    echo "🔍 Running yamllint using Docker"
+    sh '''
+      docker run --rm -v $(pwd):/data cytopia/yamllint yamllint  /data/K8s/
+    '''
+  }
+}
 
     stage('Terraform Init') {
       steps {
@@ -101,4 +98,3 @@ pipeline {
     }
   }
 }
- 
